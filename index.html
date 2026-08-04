@@ -330,6 +330,7 @@ footer{padding:80px 0 48px; border-top:1px solid var(--line); position:relative;
 .contact-form input:focus, .contact-form textarea:focus{outline:none; border-color:var(--brass);}
 .contact-form input::placeholder, .contact-form textarea::placeholder{color:var(--ink-faint);}
 .cf-status{font-family:var(--mono); font-size:11px; color:var(--teal); margin-top:10px; min-height:16px;}
+.cf-fallback{display:flex;}
 
 /* ---------- PRINT ---------- */
 @media print{
@@ -676,6 +677,10 @@ footer{padding:80px 0 48px; border-top:1px solid var(--line); position:relative;
       <div class="cf-row"><textarea id="cfMsg" rows="4" placeholder="What's on your mind?" required></textarea></div>
       <button type="submit" class="btn btn-primary">Send message ↗</button>
       <div class="cf-status" id="cfStatus"></div>
+      <div class="cf-fallback" id="cfFallback" style="display:none; margin-top:14px; gap:10px; flex-wrap:wrap;">
+        <a class="btn btn-ghost" id="cfGmailLink" href="#" target="_blank" rel="noopener">Open in Gmail ↗</a>
+        <button type="button" class="btn btn-ghost" id="cfCopyBtn">Copy message</button>
+      </div>
     </form>
 
     <div class="contact-links">
@@ -746,11 +751,32 @@ if(cf){
     const name = document.getElementById('cfName').value.trim();
     const email = document.getElementById('cfEmail').value.trim();
     const msg = document.getElementById('cfMsg').value.trim();
-    const subject = encodeURIComponent('Portfolio contact — ' + name);
-    const body = encodeURIComponent(msg + '\n\n— ' + name + ' (' + email + ')');
-    window.location.href = 'mailto:dhruvsingla1500@gmail.com?subject=' + subject + '&body=' + body;
-    document.getElementById('cfStatus').textContent = 'Opening your email client…';
+    const subject = 'Portfolio contact — ' + name;
+    const fullBody = msg + '\n\n— ' + name + ' (' + email + ')';
+
+    const mailtoUrl = 'mailto:dhruvsingla1500@gmail.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(fullBody);
+    const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=dhruvsingla1500@gmail.com&su=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(fullBody);
+
+    // attempt native mail client
+    window.location.href = mailtoUrl;
+
+    // always reveal reliable fallbacks, since mailto silently fails with no desktop client
+    document.getElementById('cfGmailLink').href = gmailUrl;
+    document.getElementById('cfCopyBtn').setAttribute('data-text', fullBody);
+    document.getElementById('cfFallback').style.display = 'flex';
+    document.getElementById('cfStatus').textContent = 'If nothing opened, use one of the options below.';
   });
+
+  const copyBtn = document.getElementById('cfCopyBtn');
+  if(copyBtn){
+    copyBtn.addEventListener('click', function(){
+      const text = copyBtn.getAttribute('data-text') || '';
+      navigator.clipboard.writeText('To: dhruvsingla1500@gmail.com\n\n' + text).then(()=>{
+        copyBtn.textContent = 'Copied ✓';
+        setTimeout(()=>{ copyBtn.textContent = 'Copy message'; }, 2000);
+      });
+    });
+  }
 }
 </script>
 
